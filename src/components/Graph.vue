@@ -53,6 +53,14 @@ var drawTiming = (inst, animationOffset) => {
     if (animationTimestamp >= requestTimestamp) {
       let x = timingPositions[entityName] * timingXUnit + 100
       let y = 500 - ((index + 1) * timingYUnit)
+      /*
+      timingRects[entityName].attr({
+        x: x,
+        y: y,
+        width: timingXUnit,
+        height: timingYUnit * index
+      })
+      */
       let graphPoint = snap.rect(x, y, timingXUnit, timingYUnit)
       graphPoint.attr({fill: 'grey'})
       // graphPoint.animate({fill: 'grey'}, requestDuration * 10)
@@ -132,6 +140,7 @@ export default {
       window.cancelAnimationFrame(this.drawNetowrkInAnimId)
     },
     startAnimation: function () {
+      this.animationState = 1
       this.drawTimingAnimId = window.requestAnimationFrame(_.partial(drawTiming, this))
       this.drawNetworkInAnimId = window.requestAnimationFrame(_.partial(drawNetworkIn, this))
     }
@@ -146,14 +155,32 @@ export default {
       timingXUnit = (1000 / entityCount)
       timingInner = degranularise(timingInner, 4)
       let maxReqCount = 0
+      let timingSizes = {}
       _.map(entityNames, (entityName, index) => {
         timingIndices[entityName] = 0
-        timingPositions[entityName] = index + 1
+        // timingPositions[entityName] = index + 1
+        timingSizes[entityName] = timingInner[entityName].length
+        /*
+        timingRects[entityName] = snap.rect(0, 0, 0, 0)
+        timingRects[entityName].attr({fill: 'grey'})
+        */
         if (timingInner[entityName].length > maxReqCount) {
           maxReqCount = timingInner[entityName].length
         }
       })
-      timingYUnit = (500 / maxReqCount) * 5
+      _.map(
+        _.sortBy(entityNames, (entityName) => {
+          return timingInner[entityName].length
+        }),
+        (entityName, index) => {
+          if (index % 2 === 0) {
+            timingPositions[entityName] = index / 2
+          } else {
+            timingPositions[entityName] = entityCount - (index / 2)
+          }
+        }
+      )
+      timingYUnit = (500 / maxReqCount) * 4
 
       networkInXUnit = 100 / networkInDataInner.length
       let maxBytes = 0
